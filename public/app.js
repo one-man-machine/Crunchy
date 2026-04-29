@@ -312,6 +312,17 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+/* ── Password toggle ───────────────────────────────── */
+document.getElementById('toggle-password').addEventListener('click', () => {
+  const input     = document.getElementById('password');
+  const eyeOpen   = document.getElementById('eye-open');
+  const eyeClosed = document.getElementById('eye-closed');
+  const showing   = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  eyeOpen.classList.toggle('hidden', !showing);
+  eyeClosed.classList.toggle('hidden', showing);
+});
+
 /* ── Boot ──────────────────────────────────────────── */
 if (loadSession()) {
   showBrowse();

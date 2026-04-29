@@ -81,6 +81,23 @@ body {
 .field input:focus { border-color: var(--cr-orange); }
 .field input::placeholder { color: var(--cr-muted); }
 
+.input-wrap { position: relative; }
+.input-wrap input { padding-right: 2.6rem; }
+.eye-btn {
+  position: absolute;
+  right: .7rem; top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--cr-muted);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  transition: color .2s;
+}
+.eye-btn:hover { color: var(--cr-text); }
+
 .error-msg {
   background: rgba(220,50,50,.15);
   border: 1px solid rgba(220,50,50,.4);
