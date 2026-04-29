@@ -94,5 +94,22 @@ app.get('/api/categories', async (req, res) => {
   }
 });
 
+// Fetch a single series by ID (used by Continue tab to check for new episodes)
+app.get('/api/series-single', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: 'id required' });
+
+  try {
+    const auth     = await getAnonToken();
+    const { data } = await axios.get(`${CR_CONTENT_BASE}/content/v2/cms/series/${id}`, {
+      params:  { locale: 'en-US' },
+      headers: { Authorization: auth, ...crHeaders() },
+    });
+    res.json(data);
+  } catch (err) {
+    res.status(err.response?.status || 500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CrunchyBrowser → http://localhost:${PORT}`));

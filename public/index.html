@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- ── Browse screen ────────────────────────────────── -->
   <header class="topbar">
     <div class="brand">
       <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" class="brand-icon">
@@ -17,12 +16,21 @@
       </svg>
       <span>CrunchyBrowser</span>
     </div>
-    <span class="version-tag">v1.1.1</span>
+
+    <nav class="tabs">
+      <button id="tab-browse" class="tab active">Browse</button>
+      <button id="tab-continue" class="tab">
+        Continue
+        <span id="continue-badge" class="tab-badge hidden"></span>
+      </button>
+    </nav>
+
+    <span class="version-tag">v1.2.0</span>
   </header>
 
   <div class="browse-container">
 
-    <!-- Filters -->
+    <!-- ── Filters sidebar ── -->
     <aside class="filters">
       <h2>Filters</h2>
 
@@ -51,6 +59,14 @@
       </div>
 
       <div class="filter-group">
+        <label class="toggle-label">
+          <input type="checkbox" id="full-season-filter" />
+          <span class="toggle-track"></span>
+          Full season (≥ 12 eps)
+        </label>
+      </div>
+
+      <div class="filter-group">
         <label for="category-select">Category</label>
         <select id="category-select">
           <option value="">All categories</option>
@@ -66,8 +82,8 @@
       </div>
     </aside>
 
-    <!-- Results -->
-    <main class="results">
+    <!-- ── Browse panel ── -->
+    <main id="panel-browse" class="results">
       <div class="results-header">
         <h2 id="results-title">Loading…</h2>
         <span id="results-count" class="badge hidden"></span>
@@ -81,9 +97,21 @@
       </div>
     </main>
 
+    <!-- ── Continue panel ── -->
+    <main id="panel-continue" class="results hidden">
+      <div class="results-header">
+        <h2>Continue Watching</h2>
+        <span class="badge-info">Series you marked as Seen that have new episodes</span>
+      </div>
+      <div id="continue-grid" class="grid"></div>
+      <div id="empty-state-continue" class="empty-state hidden">
+        <p>No series marked as Seen yet.<br/>Hover a card and click ⋮ → Mark as Seen.</p>
+      </div>
+    </main>
+
   </div>
 
-  <!-- ── Series detail modal ───────────────────────────── -->
+  <!-- ── Detail modal ── -->
   <div id="modal-overlay" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal-card">
       <button id="modal-close" class="modal-close" aria-label="Close">&times;</button>
@@ -104,11 +132,10 @@
     </div>
   </div>
 
-  <!-- ── Card context menu (shared, moved by JS) ───────── -->
+  <!-- ── Card context menu ── -->
   <div id="card-menu" class="card-menu hidden">
-    <button class="card-menu-item danger" data-action="hide">
-      🚫 Not Interested
-    </button>
+    <button class="card-menu-item" data-action="seen">👁 Mark as Seen</button>
+    <button class="card-menu-item danger" data-action="hide">🚫 Not Interested</button>
   </div>
 
   <script src="app.js"></script>
