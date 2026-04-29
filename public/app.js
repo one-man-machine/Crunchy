@@ -50,7 +50,9 @@ async function fetchSeries() {
   const query    = searchInput.value.trim();
   const sort_by  = sortSelect.value;
   const category = categorySelect.value;
-  const params   = new URLSearchParams({ n: 100, start: 0, sort_by });
+  // 'rating' is client-side only; ask API for popularity instead
+  const apiSort  = sort_by === 'rating' ? 'popularity' : sort_by;
+  const params   = new URLSearchParams({ n: 100, start: 0, sort_by: apiSort });
   if (query)    params.set('query', query);
   if (category) params.set('category', category);
 
@@ -80,6 +82,15 @@ function applyFilters() {
     }
     return true;
   });
+
+  // Client-side sort by rating descending
+  if (sortSelect.value === 'rating') {
+    filteredSeries.sort((a, b) => {
+      const ra = extractRating(a) ?? -1;
+      const rb = extractRating(b) ?? -1;
+      return rb - ra;
+    });
+  }
 
   displayedCount = 0;
   grid.innerHTML = '';
@@ -145,19 +156,45 @@ function extractRating(item) {
   return null;
 }
 
+/* ── Episode count extraction ───────────────────────────── */
+function extractEpisodes(item) {
+  const panel = item.panel ?? item;
+  const meta  = panel.series_metadata ?? panel.metadata ?? item.series_metadata ?? item.metadata ?? {};
+  const candidates = [
+    meta.episode_count,
+    meta.num_episodes,
+    item.episode_count,
+    panel.episode_count,
+  ];
+  for (const v of candidates) {
+    const n = parseInt(v, 10);
+    if (!isNaN(n) && n > 0) return n;
+  }
+  return null;
+}
+
+/* ── Best quality image ─────────────────────────────────── */
+function bestImage(images) {
+  const arr = images?.poster_tall ?? images?.poster_wide ?? [];
+  // arr[0] is the set; within it pick the largest (last) resolution
+  const sizes = Array.isArray(arr[0]) ? arr[0] : arr;
+  return sizes.at(-1)?.source ?? sizes[0]?.source ?? '';
+}
+
 /* ── Card builder ───────────────────────────────────────── */
 function buildCard(item) {
   const panel    = item.panel ?? item;
   const meta     = panel.series_metadata ?? panel.metadata ?? {};
   const title    = panel.title ?? item.title ?? 'Unknown';
-  const slug     = panel.slug_title ?? item.slug_title ?? '';
   const provider = meta.content_provider ?? item.content_provider ?? '';
   const rating   = extractRating(item);
+  const episodes = extractEpisodes(item);
   const id       = seriesId(item);
+  const imgSrc   = bestImage(panel.images) || bestImage(item.images);
 
-  const posterArr = panel.images?.poster_tall ?? panel.images?.poster_wide
-    ?? item.images?.poster_tall ?? item.images?.poster_wide ?? [];
-  const imgSrc = posterArr[0]?.[0]?.source ?? posterArr[0]?.source ?? '';
+  const metaParts = [];
+  if (rating   !== null) metaParts.push(`<span class="card-rating-text ${rating >= 4.4 ? 'high' : ''}">★ ${rating.toFixed(1)}</span>`);
+  if (episodes !== null) metaParts.push(`<span class="card-eps">${episodes} eps</span>`);
 
   const card = document.createElement('div');
   card.className = 'series-card';
@@ -167,13 +204,11 @@ function buildCard(item) {
       ${imgSrc
         ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(title)}" loading="lazy" />`
         : `<div class="no-img">🎬</div>`}
-      ${rating !== null
-        ? `<div class="card-rating ${rating >= 4.4 ? 'high' : ''}">★ ${rating.toFixed(1)}</div>`
-        : ''}
       <button class="card-menu-btn" aria-label="Options" title="Options">⋮</button>
     </div>
     <div class="card-info">
       <div class="card-title">${escHtml(title)}</div>
+      ${metaParts.length ? `<div class="card-meta-row">${metaParts.join('<span class="dot">·</span>')}</div>` : ''}
       ${provider ? `<div class="card-provider">${escHtml(provider)}</div>` : ''}
     </div>
   `;
@@ -273,9 +308,7 @@ function openModal(item) {
   const year        = meta.series_launch_year ?? meta.year ?? '';
   const genres      = meta.genres ?? item.genres ?? [];
   const rating      = extractRating(item);
-  const posterArr   = panel.images?.poster_tall ?? panel.images?.poster_wide
-    ?? item.images?.poster_tall ?? item.images?.poster_wide ?? [];
-  const imgSrc      = posterArr[0]?.[0]?.source ?? posterArr[0]?.source ?? '';
+  const imgSrc      = bestImage(panel.images) || bestImage(item.images);
 
   document.getElementById('modal-title').textContent    = title;
   document.getElementById('modal-desc').textContent     = description;
